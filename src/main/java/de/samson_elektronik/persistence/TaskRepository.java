@@ -77,7 +77,6 @@ public class TaskRepository {
             String sql = "DELETE FROM task WHERE id = ?";
 
             try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)){
-                // einen setInt(...)-Aufruf
                 stmt.setInt(1, id);
                 stmt.executeUpdate();
             } catch (SQLException e) {
@@ -85,4 +84,6 @@ public class TaskRepository {
                 throw new RuntimeException("Löschen fehlgeschlagen");
             }
         }
+
+        
 }

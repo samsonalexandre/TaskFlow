@@ -13,7 +13,9 @@ public class DatabaseManager {
         try {
             this.connection = DriverManager.getConnection(URL);
 
+
             try (Statement stmt = connection.createStatement()) {
+                stmt.execute("PRAGMA foreign_keys = ON;");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS task(id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         "title TEXT NOT NULL," +
                         "description TEXT," +
@@ -21,6 +23,13 @@ public class DatabaseManager {
                         "priority TEXT NOT NULL," +
                         "due_date TEXT)"
                 );
+
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS task_dependency(task_id INTEGER NOT NULL," +
+                        "depends_on_id INTEGER NOT NULL," +
+                        "FOREIGN KEY (task_id) REFERENCES task(id)," +
+                        "FOREIGN KEY (depends_on_id) REFERENCES task(id))"
+                );
+
             }
         } catch (Exception e) {
             e.printStackTrace();
