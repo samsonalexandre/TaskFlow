@@ -55,4 +55,34 @@ public class TaskRepository {
             }
             return tasks;
         }
+
+        public void update(Task task) {
+            String sql = "UPDATE task SET title = ?, description = ?, status = ?, priority = ?, due_date = ? WHERE id = ?";
+
+            try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)) {
+                stmt.setString(1, task.getTitle());
+                stmt.setString(2, task.getDescription());
+                stmt.setString(3, task.getStatus().name());
+                stmt.setString(4, task.getPriority().name());
+                stmt.setString(5, task.getDueDate().toString());
+                stmt.setInt(6, task.getId());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Update fehlgeschlagen");
+            }
+        }
+
+        public void deleteById(int id) {
+            String sql = "DELETE FROM task WHERE id = ?";
+
+            try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)){
+                // einen setInt(...)-Aufruf
+                stmt.setInt(1, id);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Löschen fehlgeschlagen");
+            }
+        }
 }
