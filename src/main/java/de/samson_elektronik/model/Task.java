@@ -10,23 +10,27 @@ public class Task {
     private Priority priority;
     private LocalDate dueDate;
 
-    public Task(String title, String description, Priority priority, LocalDate dueDate) {
-
-        if(title == null || title.isBlank()) {
+    // 1. Hauptkonstruktor (wird von der DB genutzt – enthält die Validierung)
+    public Task(int id, String title, String description, TaskStatus status, Priority priority, LocalDate dueDate) {
+        if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Titel darf nicht leer sein");
         }
-
+        this.id = id;
         this.title = title;
         this.description = description;
-        this.status = TaskStatus.TODO;
+        this.status = status;
         this.priority = priority;
         this.dueDate = dueDate;
     }
 
-    public Task(int id, String title, String description, TaskStatus status, Priority priority, LocalDate dueDate) {
-        this(title, description, priority, dueDate);
-        this.id = id;
-        this.status = status;
+    // 2. NEU: Konstruktor für GUI/Dialoge (ohne ID, aber mit frei wählbarem Status)
+    public Task(String title, String description, TaskStatus status, Priority priority, LocalDate dueDate) {
+        this(0, title, description, status, priority, dueDate);
+    }
+
+    // 3. Komfort-Konstruktor für neue Standard-Tasks (Status wird automatisch auf TODO gesetzt)
+    public Task(String title, String description, Priority priority, LocalDate dueDate) {
+        this(title, description, TaskStatus.TODO, priority, dueDate);
     }
 
     public int getId() {
@@ -75,5 +79,10 @@ public class Task {
 
     public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
+    }
+
+    public interface TaskExportAdapter {
+        String export(Task task);
+        Task importFrom(String line);
     }
 }
