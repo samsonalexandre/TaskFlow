@@ -28,3 +28,11 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Datenbank ###
+*.db
+*.db-journal
+
+### Gradle ###
+.gradle/
+build/
