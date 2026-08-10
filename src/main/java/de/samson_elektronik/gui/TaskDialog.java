@@ -10,6 +10,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+/**
+ * Modaler Dialog zum Anlegen UND Bearbeiten von Aufgaben (gleiche
+ * Klasse für beide Fälle, unterschieden über "existingTask == null").
+ * Enthält die Formularvalidierung (leerer Titel, ungültiges Datum)
+ * sowie die Auswahl einer Abhängigkeit zu einer anderen Aufgabe.
+ */
 public class TaskDialog extends JDialog {
     private final JTextField titleField = new JTextField(20);
     private final JTextField descriptionField = new JTextField(20);
@@ -17,7 +23,7 @@ public class TaskDialog extends JDialog {
     private final JComboBox<Priority> priorityBox = new JComboBox<>(Priority.values());
     private final JTextField dueDateField = new JTextField(LocalDate.now().toString(), 20);
 
-    // Dropdown für Abhängigkeiten (Object, damit "Keine Abhängigkeit" als String reinpasst)
+    // Object statt Task, damit auch der String "-- Keine Abhängigkeit --" reinpasst
     private final JComboBox<Object> dependencyBox = new JComboBox<>();
 
     private boolean confirmed = false;
@@ -43,7 +49,7 @@ public class TaskDialog extends JDialog {
             }
         }
 
-        // Anzeige in der ComboBox anpassen (Titel statt interner Objekt-Adresse)
+        // Zeigt in der ComboBox "#id - Titel" statt der internen Objektadresse
         dependencyBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -73,6 +79,7 @@ public class TaskDialog extends JDialog {
         formPanel.add(new JLabel("Hängt ab von:"));
         formPanel.add(dependencyBox);
 
+        // Formular mit bestehenden Werten vorbefüllen (Bearbeiten-Fall)
         if (existingTask != null) {
             titleField.setText(existingTask.getTitle());
             descriptionField.setText(existingTask.getDescription());
@@ -100,6 +107,12 @@ public class TaskDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
+    /**
+     * Validiert die Eingaben und erzeugt bzw. aktualisiert das
+     * Task-Objekt. Bei Erfolg wird der Dialog geschlossen und
+     * confirmed auf true gesetzt - so weiß der Aufrufer (MainFrame),
+     * ob wirklich gespeichert werden soll oder der Dialog abgebrochen wurde.
+     */
     private void onSave() {
         if (titleField.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Der Titel darf nicht leer sein.", "Eingabefehler", JOptionPane.ERROR_MESSAGE);

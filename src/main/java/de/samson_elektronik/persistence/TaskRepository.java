@@ -13,8 +13,21 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository Pattern: einzige Klasse, die SQL schreibt. GUI und
+ * Service-Klassen sprechen nie direkt mit der Datenbank, sondern
+ * rufen hier fachliche Methoden auf (save, findAll, update, ...).
+ * Nutzt durchgehend PreparedStatement statt Statement bei Werten,
+ * die von Nutzereingaben stammen - schützt vor SQL-Injection.
+ */
 public class TaskRepository {
 
+    /**
+     * Fügt eine neue Aufgabe ein. Die von SQLite automatisch vergebene
+     * ID (AUTOINCREMENT) wird über RETURN_GENERATED_KEYS ausgelesen
+     * und direkt in das übergebene Task-Objekt zurückgeschrieben,
+     * damit der Aufrufer sofort mit der echten ID weiterarbeiten kann.
+     */
     public void save(Task task) {
         String sql = "INSERT INTO task(title, description, status, priority, due_date) VALUES (?, ?, ?, ?, ?)";
 
@@ -38,6 +51,10 @@ public class TaskRepository {
         }
     }
 
+    /**
+     * Lädt alle Aufgaben aus der Datenbank und wandelt jede Zeile
+     * zurück in ein Task-Objekt (Gegenrichtung zu save()).
+     */
     public List<Task> findAll() {
         List<Task> tasks = new ArrayList<>();
         String sql = "SELECT * FROM task";
@@ -66,6 +83,9 @@ public class TaskRepository {
         return tasks;
     }
 
+    /**
+     * Überschreibt alle Felder einer bestehenden Aufgabe anhand ihrer ID.
+     */
     public void update(Task task) {
         String sql = "UPDATE task SET title = ?, description = ?, status = ?, priority = ?, due_date = ? WHERE id = ?";
 
@@ -83,6 +103,13 @@ public class TaskRepository {
         }
     }
 
+    /**
+     * Löscht eine Aufgabe. Wirft eine RuntimeException (verpackt eine
+     * SQLiteException), wenn andere Aufgaben über task_dependency von
+     * dieser Aufgabe abhängen - das ist gewolltes Verhalten des
+     * FOREIGN KEY-Constraints, nicht ignorierbar, muss vom Aufrufer
+     * (siehe MainFrame) behandelt werden.
+     */
     public void deleteById(int id) {
         String sql = "DELETE FROM task WHERE id = ?";
 
@@ -95,6 +122,10 @@ public class TaskRepository {
         }
     }
 
+    /**
+     * Speichert eine gerichtete Abhängigkeit: taskId hängt von
+     * dependsOnId ab (dependsOnId muss zuerst erledigt werden).
+     */
     public void addDependency(int taskId, int dependsOnId) {
         String sql = "INSERT INTO task_dependency(task_id, depends_on_id) VALUES (?, ?)";
 
@@ -108,6 +139,12 @@ public class TaskRepository {
         }
     }
 
+    /**
+     * Entfernt alle Abhängigkeiten, bei denen die übergebene Aufgabe
+     * der abhängige Task ist. Wird beim Bearbeiten genutzt, um vor
+     * dem Setzen einer neuen Abhängigkeit die alte zu entfernen
+     * (eine Aufgabe hat in diesem Projekt immer nur eine Abhängigkeit).
+     */
     public void removeDependenciesForTask(int taskId) {
         String sql = "DELETE FROM task_dependency WHERE task_id = ?";
 
@@ -120,6 +157,12 @@ public class TaskRepository {
         }
     }
 
+    /**
+     * Baut den kompletten DependencyGraph aus den DB-Daten auf:
+     * zuerst alle Task-IDs als Knoten (auch Aufgaben ohne jede
+     * Abhängigkeit müssen im Graphen vorkommen), danach alle Kanten
+     * aus task_dependency.
+     */
     public DependencyGraph loadDependencyGraph() {
         DependencyGraph graph = new DependencyGraph();
 

@@ -7,6 +7,15 @@ import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * TableModel (MVC) für die JTable in MainFrame. AbstractTableModel
+ * nimmt uns die Detailarbeit ab, wir müssen nur sagen, wie viele
+ * Zeilen/Spalten es gibt und welcher Wert an welcher Stelle steht.
+ *
+ * fireTableDataChanged() ist das Observer Pattern in der Praxis:
+ * benachrichtigt die JTable automatisch, dass sie sich neu zeichnen
+ * soll, sobald sich die zugrunde liegenden Daten ändern.
+ */
 public class TaskTableModel extends AbstractTableModel {
     private final String[] columnNames = {"ID", "Titel", "Status", "Priorität", "Fällig am"};
     private List<Task> tasks;
@@ -44,11 +53,13 @@ public class TaskTableModel extends AbstractTableModel {
         };
     }
 
+    /** Ersetzt die komplette Datenbasis, z.B. nach dem Neuladen aus der DB. */
     public void setTasks(List<Task> tasks) {
         this.tasks = tasks;
         fireTableDataChanged();
     }
 
+    /** Liefert das Task-Objekt zu einer Tabellenzeile, z.B. für Bearbeiten/Löschen. */
     public Task getTaskAt(int rowIndex) {
         if (rowIndex >= 0 && rowIndex < tasks.size()) {
             return tasks.get(rowIndex);
@@ -56,6 +67,10 @@ public class TaskTableModel extends AbstractTableModel {
         return null;
     }
 
+    /**
+     * Ordnet die Tasks in der übergebenen ID-Reihenfolge neu an
+     * (genutzt nach der Berechnung der topologischen Sortierung).
+     */
     public void applyOrder(List<Integer> orderedIds) {
         List<Task> reordered = new ArrayList<>();
 
@@ -71,6 +86,10 @@ public class TaskTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    /**
+     * Sortiert die aktuelle Liste mit der übergebenen Strategie
+     * (Strategy Pattern) und aktualisiert die Anzeige.
+     */
     public void sortBy(SortStrategy strategy) {
         tasks.sort(strategy.getComparator());
         fireTableDataChanged();

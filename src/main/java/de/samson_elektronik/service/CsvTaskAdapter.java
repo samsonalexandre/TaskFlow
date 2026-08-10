@@ -6,6 +6,11 @@ import de.samson_elektronik.model.TaskStatus;
 
 import java.time.LocalDate;
 
+/**
+ * Konkreter Adapter: übersetzt zwischen Task-Objekten und CSV-Zeilen
+ * (semikolon-getrennt, da description Kommata enthalten könnte).
+ * Weder Task noch die GUI müssen wissen, wie das CSV-Format aussieht.
+ */
 public class CsvTaskAdapter implements Task.TaskExportAdapter {
 
     private static final String DELIMITER = ";";
@@ -20,6 +25,12 @@ public class CsvTaskAdapter implements Task.TaskExportAdapter {
                 task.getDueDate();
     }
 
+    /**
+     * Wandelt eine CSV-Zeile zurück in ein Task-Objekt. Die ID aus
+     * der Zeile wird beim anschließenden Speichern (TaskRepository.save)
+     * ohnehin ignoriert - SQLite vergibt beim Import immer eine neue,
+     * eigene ID.
+     */
     @Override
     public Task importFrom(String line) {
         if (line == null || line.isBlank()) {

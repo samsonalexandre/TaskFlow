@@ -4,11 +4,26 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
+/**
+ * Singleton Pattern: stellt sicher, dass zur Laufzeit nur EINE
+ * Datenbankverbindung existiert. Nutzt Double-Checked Locking mit
+ * "volatile", damit die Instanz auch bei gleichzeitigem Zugriff aus
+ * mehreren Threads sicher nur einmal erzeugt wird.
+ *
+ * Legt beim ersten Start außerdem automatisch die benötigten Tabellen an
+ * (CREATE TABLE IF NOT EXISTS), damit die Anwendung ohne manuelles
+ * Datenbank-Setup lauffähig ist.
+ */
 public class DatabaseManager {
     private static final String URL = "jdbc:sqlite:taskflow.db";
     private static volatile DatabaseManager instance;
     private Connection connection;
 
+    /**
+     * Privater Konstruktor - verhindert, dass Aufrufer außerhalb
+     * dieser Klasse selbst "new DatabaseManager()" aufrufen können.
+     * Einziger Zugang ist getInstance().
+     */
     private DatabaseManager() {
         try {
             this.connection = DriverManager.getConnection(URL);
@@ -37,6 +52,12 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Liefert die einzige Instanz. Double-Checked Locking:
+     * der äußere null-Check vermeidet unnötiges Synchronisieren im
+     * Normalfall (Instanz existiert meist schon), der innere Check
+     * verhindert, dass zwei Threads gleichzeitig zwei Instanzen anlegen.
+     */
     public static DatabaseManager getInstance() {
         if (instance == null) {
             synchronized (DatabaseManager.class) {

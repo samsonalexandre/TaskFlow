@@ -20,6 +20,12 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Hauptfenster der Anwendung (Controller-Teil des MVC-Prinzips).
+ * Zeigt Aufgaben in einer JTable an (View: TaskTableModel) und
+ * verkabelt alle Nutzerinteraktionen (Buttons, Doppelklick) mit
+ * TaskRepository und den Service-Klassen.
+ */
 public class MainFrame extends JFrame {
     private final TaskRepository repository = new TaskRepository();
     private TaskTableModel tableModel;
@@ -42,7 +48,7 @@ public class MainFrame extends JFrame {
 
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Doppelklick zum Bearbeiten
+        // Doppelklick auf eine Zeile öffnet den Bearbeiten-Dialog
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -55,7 +61,8 @@ public class MainFrame extends JFrame {
 
                     if (dialog.isConfirmed()) {
                         repository.update(dialog.getTask());
-
+                        // alte Abhängigkeit immer zuerst entfernen, dann ggf. neue setzen -
+                        // verhindert, dass eine entfernte Abhängigkeit in der DB "hängen bleibt"
                         repository.removeDependenciesForTask(dialog.getTask().getId());
 
                         if (dialog.getSelectedDependency() != null) {
@@ -80,7 +87,7 @@ public class MainFrame extends JFrame {
         JButton exportButton = new JButton("CSV exportieren");
         JButton importButton = new JButton("CSV importieren");
 
-        // 1. Hinzufügen-Button
+        // Neue Aufgabe anlegen
         addButton.addActionListener(e -> {
             TaskDialog dialog = new TaskDialog(this, "Neue Aufgabe erstellen", null, repository.findAll());
             dialog.setVisible(true);
@@ -96,7 +103,8 @@ public class MainFrame extends JFrame {
             }
         });
 
-        // 2. Löschen-Button
+        // Ausgewählte Aufgabe löschen (mit Bestätigung + Fehlerbehandlung
+        // für den Fall, dass andere Aufgaben von ihr abhängen)
         deleteButton.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow == -1) {
@@ -112,6 +120,7 @@ public class MainFrame extends JFrame {
                     repository.deleteById(taskToDelete.getId());
                     loadTasks();
                 } catch (RuntimeException ex) {
+                    // FOREIGN KEY constraint failed: andere Aufgaben hängen noch von dieser ab
                     JOptionPane.showMessageDialog(this,
                                     "Diese Aufgabe kann nicht gelöscht werden, da andere Aufgaben von ihr abhängen.\n" +
                                     "Lösche zuerst die abhängigen Aufgaben oder entferne die Abhängigkeit.",
@@ -211,6 +220,12 @@ public class MainFrame extends JFrame {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Lädt den Abhängigkeitsgraphen aus der DB, berechnet die
+     * topologische Sortierung und zeigt sie an. Fängt zwei erwartbare
+     * Fehlerfälle sauber ab: Zyklen (IllegalStateException aus
+     * DependencyGraph) und "keine Aufgaben vorhanden".
+     */
     private void calculateExecutionOrder() {
         DependencyGraph graph = repository.loadDependencyGraph();
         List<Integer> sortedIds;
@@ -248,6 +263,7 @@ public class MainFrame extends JFrame {
         JTextArea textArea = new JTextArea(sb.toString(), 12, 35);
         textArea.setEditable(false);
         JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "Abarbeitungsreihenfolge", JOptionPane.INFORMATION_MESSAGE);
+        // Tabelle in der berechneten Reihenfolge anzeigen
         tableModel.applyOrder(sortedIds);
     }
 
@@ -256,6 +272,7 @@ public class MainFrame extends JFrame {
     }
 
     public static void main(String[] args) {
+        // GUI-Code muss auf dem Event Dispatch Thread laufen (Swing ist nicht thread-safe)
         SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
     }
 }
