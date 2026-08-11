@@ -30,7 +30,15 @@ public class TaskDialog extends JDialog {
     private Task task;
     private Task selectedDependency = null;
 
-    public TaskDialog(Frame owner, String dialogTitle, Task existingTask, List<Task> availableTasks) {
+    /**
+     * @param owner            Elternfenster (MainFrame), für Modalität und Positionierung
+     * @param dialogTitle      Fenstertitel ("Neue Aufgabe erstellen" / "Aufgabe bearbeiten")
+     * @param existingTask     null = Neuanlegen, sonst die zu bearbeitende Aufgabe
+     * @param availableTasks   alle Aufgaben, die als Abhängigkeit wählbar sind
+     * @param currentDependencyId ID der bereits gespeicherten Abhängigkeit
+     *                            (zum Vorselektieren beim Bearbeiten), null wenn keine
+     */
+    public TaskDialog(Frame owner, String dialogTitle, Task existingTask, List<Task> availableTasks, Integer currentDependencyId) {
         super(owner, dialogTitle, true);
         this.task = existingTask;
 
@@ -46,6 +54,12 @@ public class TaskDialog extends JDialog {
             // Eine Aufgabe kann nicht von sich selbst abhängen
             if (existingTask == null || t.getId() != existingTask.getId()) {
                 dependencyBox.addItem(t);
+
+                // Bestehende Abhängigkeit vorselektieren (Bearbeiten-Fall),
+                // sonst würde sie beim Speichern stillschweigend entfernt
+                if (currentDependencyId != null && t.getId() == currentDependencyId) {
+                    dependencyBox.setSelectedItem(t);
+                }
             }
         }
 

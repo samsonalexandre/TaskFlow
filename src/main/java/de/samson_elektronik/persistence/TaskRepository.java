@@ -37,7 +37,9 @@ public class TaskRepository {
             stmt.setString(2, task.getDescription());
             stmt.setString(3, task.getStatus().name());
             stmt.setString(4, task.getPriority().name());
-            stmt.setString(5, task.getDueDate().toString());
+            // Null-Prüfung wie in update(): das Fälligkeitsdatum ist optional,
+            // ohne diese Prüfung würde save() bei leerem Datum abstürzen (NPE)
+            stmt.setString(5, task.getDueDate() != null ? task.getDueDate().toString() : null);
             stmt.executeUpdate();
 
             try (ResultSet keys = stmt.getGeneratedKeys()) {
@@ -155,6 +157,31 @@ public class TaskRepository {
             e.printStackTrace();
             throw new RuntimeException("Entfernen der Abhängigkeit fehlgeschlagen");
         }
+    }
+
+    /**
+     * Liest aus, von welcher Aufgabe die übergebene Aufgabe abhängt.
+     * Wird beim Öffnen des Bearbeiten-Dialogs genutzt, um die bestehende
+     * Abhängigkeit in der ComboBox vorzuselektieren - sonst würde sie
+     * beim Speichern unbemerkt verloren gehen.
+     *
+     * @return die ID der Aufgabe, von der abhängt wird, oder null wenn keine Abhängigkeit existiert
+     */
+    public Integer findDependencyIdForTask(int taskId) {
+        String sql = "SELECT depends_on_id FROM task_dependency WHERE task_id = ?";
+
+        try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, taskId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("depends_on_id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Laden der Abhängigkeit fehlgeschlagen", e);
+        }
+        return null; // keine Abhängigkeit vorhanden
     }
 
     /**

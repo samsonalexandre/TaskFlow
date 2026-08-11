@@ -15,6 +15,13 @@ public class CsvTaskAdapter implements Task.TaskExportAdapter {
 
     private static final String DELIMITER = ";";
 
+    /**
+     * Wandelt ein Task-Objekt in eine CSV-Zeile um. Ein fehlendes
+     * Fälligkeitsdatum wird als Text "null" geschrieben - importFrom()
+     * erkennt das und setzt beim Einlesen wieder null.
+     * Bekannte Einschränkung: enthält Titel/Beschreibung selbst ein
+     * Semikolon, verschiebt das die Spalten (für dieses Projekt akzeptiert).
+     */
     @Override
     public String export(Task task) {
         return task.getId() + DELIMITER +

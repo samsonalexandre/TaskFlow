@@ -51,6 +51,9 @@ public class Task {
         this(title, description, TaskStatus.TODO, priority, dueDate);
     }
 
+    // --- Getter und Setter (Kapselung: Felder sind private, ---
+    // --- Zugriff von außen nur über diese Methoden möglich) ---
+
     public int getId() {
         return id;
     }

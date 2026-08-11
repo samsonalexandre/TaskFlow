@@ -11,7 +11,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -56,7 +58,9 @@ public class MainFrame extends JFrame {
                     int selectedRow = table.getSelectedRow();
                     Task taskToEdit = tableModel.getTaskAt(selectedRow);
 
-                    TaskDialog dialog = new TaskDialog(MainFrame.this, "Aufgabe bearbeiten", taskToEdit, repository.findAll());
+                    // Bestehende Abhängigkeit mitgeben, damit der Dialog sie vorselektieren kann
+                    Integer currentDependencyId = repository.findDependencyIdForTask(taskToEdit.getId());
+                    TaskDialog dialog = new TaskDialog(MainFrame.this, "Aufgabe bearbeiten", taskToEdit, repository.findAll(), currentDependencyId);
                     dialog.setVisible(true);
 
                     if (dialog.isConfirmed()) {
@@ -87,9 +91,10 @@ public class MainFrame extends JFrame {
         JButton exportButton = new JButton("CSV exportieren");
         JButton importButton = new JButton("CSV importieren");
 
-        // Neue Aufgabe anlegen
+        // 1. Neue Aufgabe anlegen
         addButton.addActionListener(e -> {
-            TaskDialog dialog = new TaskDialog(this, "Neue Aufgabe erstellen", null, repository.findAll());
+            // Beim Neuanlegen gibt es noch keine bestehende Abhängigkeit -> null
+            TaskDialog dialog = new TaskDialog(this, "Neue Aufgabe erstellen", null, repository.findAll(), null);
             dialog.setVisible(true);
 
             if (dialog.isConfirmed()) {
@@ -103,7 +108,7 @@ public class MainFrame extends JFrame {
             }
         });
 
-        // Ausgewählte Aufgabe löschen (mit Bestätigung + Fehlerbehandlung
+        // 2. Ausgewählte Aufgabe löschen (mit Bestätigung + Fehlerbehandlung
         // für den Fall, dass andere Aufgaben von ihr abhängen)
         deleteButton.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
@@ -170,13 +175,12 @@ public class MainFrame extends JFrame {
             int result = fileChooser.showOpenDialog(this);
 
             if (result == JFileChooser.APPROVE_OPTION) {
-                // java.io.File importieren nicht vergessen!
-                java.io.File file = fileChooser.getSelectedFile();
+                File file = fileChooser.getSelectedFile();
                 CsvTaskAdapter adapter = new CsvTaskAdapter();
-                int importedCount = 0;
-                int skippedCount = 0;
+                int importedCount = 0;   // erfolgreich importierte Zeilen
+                int skippedCount = 0;    // fehlerhafte, übersprungene Zeilen
 
-                try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(file))) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         try {
@@ -201,7 +205,7 @@ public class MainFrame extends JFrame {
                     JOptionPane.showMessageDialog(this, message, "Import abgeschlossen", JOptionPane.INFORMATION_MESSAGE);
                     loadTasks(); // Tabelle nach dem Import direkt neu zeichnen
 
-                } catch (java.io.IOException ex) {
+                } catch (IOException ex) {
                     JOptionPane.showMessageDialog(this, "Import fehlgeschlagen: " + ex.getMessage(),
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }

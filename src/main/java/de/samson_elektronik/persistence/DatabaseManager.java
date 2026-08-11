@@ -69,6 +69,7 @@ public class DatabaseManager {
         return instance;
     }
 
+    /** Liefert die geteilte Verbindung - alle Repository-Methoden nutzen dieselbe. */
     public Connection getConnection() {
         return this.connection;
     }
