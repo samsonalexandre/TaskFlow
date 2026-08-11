@@ -44,6 +44,7 @@ public class MainFrame extends JFrame {
     }
 
     private void initComponents() {
+        getContentPane().setBackground(new Color(2, 242, 245));
         List<Task> tasks = repository.findAll();
         tableModel = new TaskTableModel(tasks);
         table = new JTable(tableModel);
