@@ -47,7 +47,6 @@ public class MainFrame extends JFrame {
         List<Task> tasks = repository.findAll();
         tableModel = new TaskTableModel(tasks);
         table = new JTable(tableModel);
-
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         // Doppelklick auf eine Zeile öffnet den Bearbeiten-Dialog
@@ -222,6 +221,20 @@ public class MainFrame extends JFrame {
         buttonPanel.add(importButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
+
+
+        addButton.setBackground(new Color(76, 175, 80));
+        deleteButton.setBackground(new Color(244, 67, 54));
+        buttonPanel.setBackground(new Color(3, 169, 244));
+        refreshButton.setBackground(new Color(3, 169, 244));
+        calcOrderButton.setBackground(new Color(3, 169, 244));
+        sortByDateButton.setBackground(new Color(3, 169, 244));
+        sortByPriorityButton.setBackground(new Color(3, 169, 244));
+        exportButton.setBackground(new Color(255, 152, 0));
+        importButton.setBackground(new Color(230, 126, 0));
+
+        buttonPanel.setBackground(new Color(230, 240, 250));
+        table.setSelectionBackground(new Color(187, 222, 251));
     }
 
     /**
