@@ -7,7 +7,6 @@ import java.time.LocalDate;
  * weder Datenbank noch GUI, das entspricht der Schichtentrennung
  * des Projekts (model / persistence / service / gui).
  */
-
 public class Task {
     private int id;
     private String title;
@@ -53,7 +52,6 @@ public class Task {
 
     // --- Getter und Setter (Kapselung: Felder sind private, ---
     // --- Zugriff von außen nur über diese Methoden möglich) ---
-
     public int getId() {
         return id;
     }

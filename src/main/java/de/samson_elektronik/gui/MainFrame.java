@@ -44,7 +44,7 @@ public class MainFrame extends JFrame {
     }
 
     private void initComponents() {
-        getContentPane().setBackground(new Color(2, 242, 245));
+
         List<Task> tasks = repository.findAll();
         tableModel = new TaskTableModel(tasks);
         table = new JTable(tableModel);
@@ -118,7 +118,8 @@ public class MainFrame extends JFrame {
             }
 
             Task taskToDelete = tableModel.getTaskAt(selectedRow);
-            int confirm = JOptionPane.showConfirmDialog(this, "Möchtest du die Aufgabe \"" + taskToDelete.getTitle() + "\" wirklich löschen?", "Löschen bestätigen", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            int confirm = JOptionPane.showConfirmDialog(this, "Möchtest du die Aufgabe \"" + taskToDelete.getTitle() +
+                    "\" wirklich löschen?", "Löschen bestätigen", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
@@ -223,7 +224,6 @@ public class MainFrame extends JFrame {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
-
         addButton.setBackground(new Color(76, 175, 80));
         deleteButton.setBackground(new Color(244, 67, 54));
         buttonPanel.setBackground(new Color(3, 169, 244));
@@ -235,7 +235,6 @@ public class MainFrame extends JFrame {
         importButton.setBackground(new Color(230, 126, 0));
 
         buttonPanel.setBackground(new Color(230, 240, 250));
-        table.setSelectionBackground(new Color(187, 222, 251));
     }
 
     /**
