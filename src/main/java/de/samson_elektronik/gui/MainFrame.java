@@ -11,12 +11,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -148,7 +151,8 @@ public class MainFrame extends JFrame {
         // 6. Nach Priorität sortieren
         sortByPriorityButton.addActionListener(e -> tableModel.sortBy(new SortByPriority()));
 
-        // 7. CSV exportieren
+        // 7. CSV exportieren - die komplette Formatlogik (Quoting, Escaping)
+        // steckt im CsvTaskAdapter, die GUI reicht nur Datei und Daten durch
         exportButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setSelectedFile(new File("taskflow_export.csv"));
@@ -158,10 +162,9 @@ public class MainFrame extends JFrame {
                 File file = fileChooser.getSelectedFile();
                 CsvTaskAdapter adapter = new CsvTaskAdapter();
 
-                try (PrintWriter writer = new PrintWriter(new FileWriter(file))){
-                    for (Task task : repository.findAll()) {
-                        writer.println(adapter.export(task));
-                    }
+                // UTF-8 explizit angeben, damit Umlaute auf jedem System gleich ankommen
+                try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+                    adapter.export(repository.findAll(), writer);
                     JOptionPane.showMessageDialog(this, "Export erfolgreich");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(this, "Export fehlgeschlagen: " + ex.getMessage(),
@@ -170,7 +173,8 @@ public class MainFrame extends JFrame {
             }
         });
 
-        // 8. CSV importieren
+        // 8. CSV importieren - der Adapter liest und validiert die Datensätze,
+        // die GUI speichert sie nur noch und meldet das Ergebnis
         importButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             int result = fileChooser.showOpenDialog(this);
@@ -178,29 +182,18 @@ public class MainFrame extends JFrame {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 CsvTaskAdapter adapter = new CsvTaskAdapter();
-                int importedCount = 0;   // erfolgreich importierte Zeilen
-                int skippedCount = 0;    // fehlerhafte, übersprungene Zeilen
 
-                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        try {
-                            Task task = adapter.importFrom(line);
-                            if (task != null) {
-                                repository.save(task);
-                                importedCount++;
-                            }
-                        } catch (Exception ex) {
-                            // Fehlerhafte Zeile ignorieren, aber für uns im Hintergrund protokollieren
-                            System.err.println("Zeile übersprungen: " + line + " - Grund: " + ex.getMessage());
-                            skippedCount++;
-                        }
+                try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+                    Task.ImportResult importResult = adapter.importFrom(reader);
+
+                    for (Task task : importResult.tasks()) {
+                        repository.save(task);
                     }
 
                     // Dynamische Erfolgsmeldung zusammenbauen
-                    String message = importedCount + " Aufgabe(n) erfolgreich importiert!";
-                    if (skippedCount > 0) {
-                        message += "\n" + skippedCount + " fehlerhafte Zeile(n) wurden übersprungen.";
+                    String message = importResult.tasks().size() + " Aufgabe(n) erfolgreich importiert!";
+                    if (importResult.skippedCount() > 0) {
+                        message += "\n" + importResult.skippedCount() + " fehlerhafte Datensätze wurden übersprungen.";
                     }
 
                     JOptionPane.showMessageDialog(this, message, "Import abgeschlossen", JOptionPane.INFORMATION_MESSAGE);

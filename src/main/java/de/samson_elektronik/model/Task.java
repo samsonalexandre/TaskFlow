@@ -104,9 +104,26 @@ public class Task {
      * Adapter Pattern: generische Schnittstelle für die Übersetzung
      * zwischen Task-Objekten und einem externen Textformat. Konkrete
      * Formate (z.B. CSV) implementieren dieses Interface.
+     *
+     * Bewusst Reader/Writer statt einzelner String-Zeilen: ein Datensatz
+     * kann sich über mehrere Textzeilen erstrecken (z.B. Zeilenumbruch
+     * in der Beschreibung) - das kann nur die Format-Implementierung
+     * selbst korrekt zerlegen, nicht der Aufrufer mit readLine().
      */
     public interface TaskExportAdapter {
-        String export(Task task);
-        Task importFrom(String line);
+        /** Schreibt alle Aufgaben in das Zielformat. */
+        void export(java.util.List<Task> tasks, java.io.Writer writer) throws java.io.IOException;
+
+        /** Liest alle Aufgaben aus dem Format ein; fehlerhafte Datensätze werden übersprungen. */
+        ImportResult importFrom(java.io.Reader reader) throws java.io.IOException;
+    }
+
+    /**
+     * Ergebnis eines Imports: die erfolgreich gelesenen Aufgaben plus die
+     * Anzahl übersprungener (fehlerhafter) Datensätze - so kann die GUI
+     * dem Nutzer eine ehrliche Rückmeldung geben. Als Record umgesetzt:
+     * unveränderliches Wertobjekt, Java erzeugt Konstruktor und Zugriffsmethoden.
+     */
+    public record ImportResult(java.util.List<Task> tasks, int skippedCount) {
     }
 }

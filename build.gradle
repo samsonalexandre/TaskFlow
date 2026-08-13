@@ -12,6 +12,10 @@ repositories {
 
 dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.53.2.1'
+
+    // OpenCSV: robustes CSV-Lesen/Schreiben (Quoting, Escaping, Zeilenumbrüche
+    // innerhalb von Feldern) statt fehleranfälligem manuellem String.split()
+    implementation 'com.opencsv:opencsv:5.11.2'
 }
 
 java {
