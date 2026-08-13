@@ -24,6 +24,7 @@ Anders als ein einfaches To-do-Tool erlaubt TaskFlow, Abhängigkeiten zwischen A
 | Sprache | Java 21 (LTS) |
 | Build-Tool | Gradle |
 | Datenbank | SQLite (über `org.xerial:sqlite-jdbc`) |
+| CSV-Verarbeitung | [OpenCSV](https://opencsv.sourceforge.net/) |
 | GUI | Java Swing |
 
 ## Architektur
@@ -47,7 +48,7 @@ Diese Trennung sorgt dafür, dass die Kernlogik (Datenmodell, Graph-Algorithmus)
 | **Singleton** | `DatabaseManager` | Stellt sicher, dass zur Laufzeit nur eine Datenbankverbindung existiert (Double-Checked Locking mit `volatile`) |
 | **Factory** | `TaskFactory` | Kapselt die Erzeugung von `Task`-Objekten mit sinnvollen Standardwerten |
 | **Strategy** | `SortStrategy`, `SortByDueDate`, `SortByPriority` | Austauschbare Sortierkriterien für die Aufgabenliste, zur Laufzeit wählbar |
-| **Adapter** | `TaskExportAdapter`, `CsvTaskAdapter` | Übersetzt zwischen dem `Task`-Domänenmodell und dem CSV-Zeilenformat für Export/Import |
+| **Adapter** | `TaskExportAdapter`, `CsvTaskAdapter` | Übersetzt zwischen dem `Task`-Domänenmodell und dem CSV-Format für Export/Import (intern über OpenCSV) |
 | **Observer** | Swing `AbstractTableModel` (`TaskTableModel`) | `fireTableDataChanged()` benachrichtigt die `JTable` automatisch über Datenänderungen — das Standard-Beobachter-Prinzip von Swing |
 
 ## Algorithmus: Topologische Sortierung
@@ -58,6 +59,10 @@ Diese Trennung sorgt dafür, dass die Kernlogik (Datenmodell, Graph-Algorithmus)
 2. Alle Knoten ohne offene Abhängigkeiten werden in eine Warteschlange aufgenommen
 3. Abarbeitung der Warteschlange, dabei Verringerung des In-Degree betroffener Nachbarknoten
 4. Enthält das Ergebnis am Ende weniger Knoten als der Graph insgesamt hat, liegt ein Zyklus vor — die Anwendung meldet dies statt abzustürzen
+
+## CSV-Export und -Import
+
+Export und Import laufen über [OpenCSV](https://opencsv.sourceforge.net/) statt über manuelles `String.split()`. Grund: Ohne eine solche Bibliothek verschiebt ein Semikolon, ein Anführungszeichen oder ein Zeilenumbruch innerhalb von Titel oder Beschreibung die Spalten der Datei — das führt nicht nur zu kaputten Daten, sondern kann bei gezielt präparierten Eingaben auch Felder wie Status oder Priorität überschreiben (CSV-Injection). OpenCSV quotet und escaped jedes Feld automatisch, wodurch der Feldinhalt strikt von der Dateistruktur getrennt bleibt. Fehlerhafte Datensätze werden beim Import einzeln übersprungen und gezählt, statt den gesamten Import abzubrechen.
 
 ## Datenbankschema
 
