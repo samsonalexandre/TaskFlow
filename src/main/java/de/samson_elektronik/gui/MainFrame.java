@@ -40,7 +40,7 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
 
         initComponents();
-        loadTasks();
+        //loadTasks();
     }
 
     private void initComponents() {
