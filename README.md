@@ -6,12 +6,6 @@ Eine Desktop-Anwendung zur Aufgabenverwaltung mit Abhängigkeitsgraph und automa
 
 Anders als ein einfaches To-do-Tool erlaubt TaskFlow, Abhängigkeiten zwischen Aufgaben abzubilden (z. B. "Aufgabe B kann erst starten, wenn Aufgabe A abgeschlossen ist"). Über eine topologische Sortierung berechnet die Anwendung daraus eine gültige Bearbeitungsreihenfolge und erkennt zirkuläre Abhängigkeiten automatisch.
 
-## Screenshots
-
-<!-- Screenshot der Hauptansicht (Tabelle mit Tasks) hier einfügen -->
-<!-- Screenshot des "Aufgabe bearbeiten"-Dialogs hier einfügen -->
-<!-- Screenshot der berechneten Reihenfolge hier einfügen -->
-
 ## Funktionsumfang
 
 - Aufgaben anlegen, bearbeiten, löschen (CRUD)
