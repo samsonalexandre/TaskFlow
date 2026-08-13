@@ -25,11 +25,22 @@ public class CsvTaskAdapter implements Task.TaskExportAdapter {
     @Override
     public String export(Task task) {
         return task.getId() + DELIMITER +
-                task.getTitle() + DELIMITER +
-                task.getDescription() + DELIMITER +
+                sanitize(task.getTitle()) + DELIMITER +
+                sanitize(task.getDescription()) + DELIMITER +
                 task.getStatus().name() + DELIMITER +
                 task.getPriority().name() + DELIMITER +
                 task.getDueDate();
+    }
+
+    private String sanitize(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        char first = value.charAt(0);
+        if (first == '=' || first == '+' || first == '-' || first == '@' || first == '\t') {
+            return "'" + value;
+        }
+        return value;
     }
 
     /**
@@ -51,8 +62,8 @@ public class CsvTaskAdapter implements Task.TaskExportAdapter {
         }
 
         int id = Integer.parseInt(parts[0]);
-        String title = parts[1];
-        String description = parts[2];
+        String title = stripFormulaPrefix(parts[1]);
+        String description = stripFormulaPrefix(parts[2]);
         TaskStatus status = TaskStatus.valueOf(parts[3]);
         Priority priority = Priority.valueOf(parts[4]);
 
@@ -63,5 +74,12 @@ public class CsvTaskAdapter implements Task.TaskExportAdapter {
         }
 
         return new Task(id, title, description, status, priority, dueDate);
+    }
+
+    private String stripFormulaPrefix(String value) {
+        if (value != null && value.startsWith("'")) {
+            return value.substring(1);
+        }
+        return value;
     }
 }
